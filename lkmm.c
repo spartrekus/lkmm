@@ -1,5 +1,6 @@
 
 //////////////////////////////////////////
+//////////////////////////////////////////
 // lkmm  
 //////////////////////////////////////////
 //////////////////////////////////////////
@@ -59,6 +60,9 @@ int pansel = 1;
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
+char pathclipboard[PATH_MAX];
+
+
 
 ///////////////////////////////////////////
 void readfile( char *filesource )
@@ -75,6 +79,11 @@ void readfile( char *filesource )
    }
 }
    
+
+
+
+
+
 
 
 
@@ -289,8 +298,6 @@ void strninput( char *mytitle, char *foostr )
       int j; 
       char ptr[PATH_MAX];
       char str[PATH_MAX];
-      //for ( chr = 0 ;  chr <= strlen( strmsg )-1 ; chr++) 
-      //   ptr[j++]=str[chr];
 
       while( foousergam == 0 ) 
       {
@@ -299,7 +306,8 @@ void strninput( char *mytitle, char *foostr )
          for ( chr = 0 ;  chr <= cols-1 ; chr++) printf( " ");
 
          home();
-         printf( "|%s|", mytitle );
+         if ( strcmp( mytitle, "" ) != 0 ) 
+            printf( "|%s|", mytitle );
 
          ansigotoyx( rows, 0 );
          for ( chr = 0 ;  chr <= cols-1 ; chr++) printf( " ");
@@ -310,19 +318,21 @@ void strninput( char *mytitle, char *foostr )
          if ( ch == 10 )       foousergam = 1;
 
 	 else if ( ch == 27 ) 
-         {
-              foousergam = 1;
 	      strncpy( strmsg, ""  ,  PATH_MAX );
-         }
 
-	 else if ( ( ch == '#' ) || ( ch == 8 )  || ( ch == 127 ) ) 
+	 else if ( ( ch == 8 )  || ( ch == 127 ) )  
          {
+            if ( strlen( strmsg ) >= 2 ) 
+            {
               j = 0; strncpy(  ptr , "" ,  PATH_MAX );
               for ( chr = 0 ;  chr <= strlen( strmsg )-2 ; chr++) 
               {
                  ptr[j++] = strmsg[chr];
               }
 	      strncpy( strmsg, ptr  ,  PATH_MAX );
+            }
+            else
+	      strncpy( strmsg, ""  ,  PATH_MAX );
          }
 
 	 else if (
@@ -374,8 +384,49 @@ void strninput( char *mytitle, char *foostr )
 
 
 
+///////////////////////////////////////////
+void printhline( )
+{
+   int ch; 
+   for ( ch = 0 ;  ch <= cols-1 ; ch++) printf( "%c", '-');
+}
 
 
+
+///////////////////////////////////////////
+void readfilesp( char *filesource, int linestart , int lineend )
+{
+  FILE *source; 
+  int ch ;  int linecount = 1;
+  source = fopen( filesource , "r");
+  if ( source == NULL ) { printf( "File not found.\n" ); } else  
+  {
+   clear_screen();
+   for ( ch = 0 ;  ch <= cols-1 ; ch++) printf( "%c", '-');
+   printf( "FILE: %s\n", filesource );
+   for ( ch = 0 ;  ch <= cols-1 ; ch++) printf( "%c", '-');
+   printf( "%d: ", linecount );
+   while( ( ch = fgetc(source) ) != EOF )
+   {
+       if ( linecount <= lineend ) 
+       {
+         if ( ch == '\n' ) 
+         {
+            linecount++; 
+            printf( "\n%d: ", linecount );
+         }
+         else
+            printf( "%c", ch );
+       }
+   }
+   fclose(source);
+   }
+
+   printf( "\33[2K" ); 
+   printf( "\r" );
+   for ( ch = 0 ;  ch <= cols-1 ; ch++) printf( "%c", '-');
+}
+   
 
 
 
@@ -414,8 +465,9 @@ int main( int argc, char *argv[])
     nexp_user_sel[2] = 1;
     nexp_user_scrolly[1] = 0;
     nexp_user_scrolly[2] = 0;
-    strncpy( pathpan[ 1 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
-    strncpy( pathpan[ 2 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+    strncpy( pathpan[ 1 ] ,  getcwd( cwd, PATH_MAX ), PATH_MAX );
+    strncpy( pathpan[ 2 ] ,  getcwd( cwd, PATH_MAX ), PATH_MAX );
+    strncpy( pathclipboard , getcwd( cwd, PATH_MAX ), PATH_MAX );
     viewpan[ 1 ] = 1;
     viewpan[ 2 ] = 1;
 
@@ -509,6 +561,7 @@ int main( int argc, char *argv[])
 
        else if ( ch == 'r' ) 
        {
+           clear_screen();
            strncpy( string , "  " , PATH_MAX );
            strncat( string , " less " , PATH_MAX - strlen( string ) -1 );
            strncat( string , " " , PATH_MAX - strlen( string ) -1 );
@@ -517,6 +570,21 @@ int main( int argc, char *argv[])
            strncat( string , "\" " , PATH_MAX - strlen( string ) -1 );
            nsystem( string ); 
        }
+
+         else if ( ch == '"')      
+         {
+            chdir( pathpan[ pansel ] );
+            strncpy( pathclipboard , getcwd( string, PATH_MAX ), PATH_MAX );
+         }
+         else if ( ( ch == 'b') || ( ch == '\'')   )
+         {
+            home();printf( "|BACK|");
+            chdir( pathpan[ pansel ] );
+            chdir( pathclipboard );
+            strncpy( pathpan[ pansel ] , getcwd( string, PATH_MAX ), PATH_MAX );
+            nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
+         }
+
 
        else if ( ch == 10 ) 
        {
@@ -529,6 +597,15 @@ int main( int argc, char *argv[])
            nsystem( string ); 
        }
 
+       else if ( ch == 'p') 
+       {
+          if ( fexist(   nexp_user_fileselection ) == 1 )
+          {
+            readfilesp( nexp_user_fileselection , 0 , rows-4 );
+            getchar();
+          }
+       }
+
        else if ( ( ch == 'o') && ( pansel == 1 )   )
        {
             chdir( pathpan[ 1 ] );
@@ -537,8 +614,6 @@ int main( int argc, char *argv[])
             nexp_user_scrolly[ 2 ] = 0; 
             strncpy( pathpan[ 2 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
        }
-
-
 
        else if ( ( ch == 'o') && ( pansel == 2 )   )
        {
@@ -563,7 +638,7 @@ int main( int argc, char *argv[])
        else if ( ch == 'v' )   {  enable_waiting_for_enter();  nrunwith(  " vim  ",  nexp_user_fileselection    );   }
 
 
-        else if (ch == '!') 
+        else if ( ch == '!') 
         {
             strninput( " Run Cmd on File (!) ", "" );
             strncpy( string, userstr , PATH_MAX );
@@ -588,6 +663,33 @@ int main( int argc, char *argv[])
                getchar();
             }
         }
+
+
+
+       else if ( ch == ';' ) 
+       {
+            strninput( " Run CHDIR Command ", "" );
+            strncpy( string, userstr , PATH_MAX );
+            printf("\n" );
+            printf("\n" );
+            printf("got: \"%s\"\n", string );
+            chdir( pathpan[ pansel ] );
+            chdir( string );
+            strncpy( pathpan[ pansel ] , getcwd( string, PATH_MAX ), PATH_MAX );
+            nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
+       }
+
+
+       else if ( ch == ':' ) 
+       {
+            clear_screen( );
+            ansigotoyx( rows/2-1 , 0 );
+            printhline( );
+            printf("\n" );
+            strninput( "", "" );
+            strncpy( string, userstr , PATH_MAX );
+            printf("got: \"%s\"\n", string );
+       }
 
 
        else if ( ch == '1' )
