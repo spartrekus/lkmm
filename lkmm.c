@@ -65,6 +65,22 @@ char file_filter[PATH_MAX];
 
 
 
+char *fbasename(char *name)
+{
+  char *base = name;
+  while (*name)
+    {
+      if (*name++ == '/')
+	{
+	  base = name;
+	}
+    }
+  return (base);
+}
+
+
+
+
 
 ///////////////////////////////////////////
 void readfile( char *filesource )
@@ -638,7 +654,7 @@ int main( int argc, char *argv[])
        else if ( ch == '5') 
        {
                    chdir( pathpan[ pansel ] );
-                   strncpy( string, " cp   " , PATH_MAX );
+                   strncpy( string, " cp -r " , PATH_MAX );
                    strncat( string , " \"" , PATH_MAX - strlen(string) - 1);
                    strncat( string ,   nexp_user_fileselection  , PATH_MAX - strlen(string) - 1);
                    strncat( string , "\" " , PATH_MAX - strlen(string) - 1);
@@ -646,6 +662,8 @@ int main( int argc, char *argv[])
                    if ( pansel == 2 ) foo = 1; else if ( pansel == 1 ) foo = 2; 
                    strncat( string , " \"" , PATH_MAX - strlen(string) - 1);
                    strncat( string , pathpan[ foo ] ,  PATH_MAX - strlen(string) - 1);
+                   strncat( string , "/" ,  PATH_MAX - strlen(string) - 1);
+                   strncat( string , fbasename(  nexp_user_fileselection ) , PATH_MAX - strlen(string) - 1);
                    strncat( string , "\" " , PATH_MAX - strlen(string) - 1);
                    ansigotoyx( rows, 0 );
                    gfxhline( rows , 0 , cols-1, ' '); 
@@ -688,6 +706,39 @@ int main( int argc, char *argv[])
                    if ( ( foo == '1' ) || ( foo == 'y' ) )
                       nsystem( string );
         }
+
+
+        else if ( ch == '7') 
+        {
+            ansigotoyx( rows-1 , 0 );
+            printhline( );
+            ansigotoyx( rows , 0 );
+            strninput( "", "" );
+            strncpy( string, userstr , PATH_MAX );
+            printf("got: \"%s\"\n", string );
+
+                   chdir( pathpan[ pansel ] );
+                   strncpy( string, " mkdir   " , PATH_MAX );
+                   strncat( string , " \"" , PATH_MAX - strlen(string) - 1);
+                   strncat( string , userstr  , PATH_MAX - strlen(string) - 1);
+                   strncat( string , "\" " , PATH_MAX - strlen(string) - 1);
+                   strncat( string , "  " , PATH_MAX - strlen(string) - 1);
+
+                   ansigotoyx( rows, 0 );
+                   gfxhline( rows , 0 , cols-1, ' '); 
+                   ansigotoyx( rows-1, 0 );
+                   gfxhline( rows-1 , 0 , cols-1 , ' ' ); 
+                   ansigotoyx( rows, 0 );
+                   gfxhline(  rows-1 , 0 , cols-1 , '=' ); 
+
+                   printf( "CMD: %s [y/n]?\n" ,  string );
+                   printf( "Answer: Yes or No [y/n]?\n" );
+                   printf( "=========================\n" );
+                   foo = getchar();
+                   if ( ( foo == '1' ) || ( foo == 'y' ) )
+                      nsystem( string );
+        }
+
 
 
 
@@ -829,10 +880,8 @@ int main( int argc, char *argv[])
 
        else if ( ch == 'f' ) 
        {
-            //clear_screen( );
             ansigotoyx( rows-1 , 0 );
             printhline( );
-            //printf("\n" );
             ansigotoyx( rows , 0 );
             strninput( "", "" );
             strncpy( string, userstr , PATH_MAX );
