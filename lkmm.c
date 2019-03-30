@@ -1,4 +1,3 @@
-
 //////////////////////////////////////////
 //////////////////////////////////////////
 // lkmm  (improved2)
@@ -219,11 +218,16 @@ int  tc_det_dir_type = 0;
 /////////////////////////
 void printdir( int pyy, int fopxx, char *mydir , int panviewpr )
 {
+   //int pxx = fopxx ;
+   //if ( pxx == 0 ) pxx = 2;
    int pxx = fopxx;
-   if ( pxx == 0 )       pxx = 2;
+   if ( pxx == 0 ) pxx = 2;
+   //if ( panviewpr == 2 ) pxx = cols/2;
    DIR *dirp; int posy = 0;  int posx, chr ; 
    int fooselection = 0;
+
    posy = 1; posx = cols/2;
+
    char cwd[PATH_MAX];
    struct dirent *dp;
    dirp = opendir( mydir  );
@@ -232,7 +236,6 @@ void printdir( int pyy, int fopxx, char *mydir , int panviewpr )
    while  ((dp = readdir( dirp )) != NULL ) 
    if ( posy <= rows-3 )
    {
-        //printf("%s\n", KYEL);
         entrycounter++;
         if ( entrycounter <= nexp_user_scrolly[panviewpr] )
               continue;
@@ -251,9 +254,6 @@ void printdir( int pyy, int fopxx, char *mydir , int panviewpr )
             posy++;  fooselection++;
             if ( dp->d_type == DT_DIR ) 
             {
-                 //color_set( 3 , NULL );
-                 //mvaddch( posy, posx++ , '/' );
-                 //printf( "/" );
                  ansigotoyx( posy, pxx );
                  printf( "/" );
                  posx++;
@@ -263,27 +263,28 @@ void printdir( int pyy, int fopxx, char *mydir , int panviewpr )
                if ( tc_det_dir_type == 1 )
                if ( fexist( dp->d_name ) == 2 )
                {
-                 //color_set( 3 , NULL );
-                 //mvaddch( posy, posx++ , '/' );
-                 //printf( "/" );
                  ansigotoyx( posy, pxx );
                  printf( "/" );
                  posx++;
                }
             }
 
-            ansigotoyx( posy, pxx-1 );
             if ( nexp_user_sel[ panviewpr ] == fooselection ) 
             {
                   if ( panviewpr == pansel )
                   {
+                    ansigotoyx( posy, pxx-1 );
+                    //ansigotoyx( posy, fopxx );
                     strncpy( nexp_user_fileselection, dp->d_name , PATH_MAX );
-                    //color_set( 4, NULL );
                     printf( ">" );
                   }
             }
             else 
+            {
+                  ansigotoyx( posy, fopxx );
                   printf( " " );
+            }
+
 
             ansigotoyx( posy, pxx );
             for ( chr = 0 ;  chr <= strlen(dp->d_name) ; chr++) 
@@ -341,6 +342,9 @@ void strninput( char *mytitle, char *foostr )
          if ( ch == 10 )       foousergam = 1;
 
 	 else if ( ch == 27 ) 
+	      strncpy( strmsg, ""  ,  PATH_MAX );
+
+	 else if ( ch == 2 ) 
 	      strncpy( strmsg, ""  ,  PATH_MAX );
 
 	 else if ( ch == 4 ) 
@@ -483,45 +487,59 @@ void gfxhline( int y1 , int x1 , int x2 , int mychar )
     for( foox = x1 ; foox <= x2 ; foox++) 
          printf( "%c", mychar );
 }
+
+void gfxrect( int y1, int x1, int y2, int x2 )
+{
+    int foo, fooy , foox ;
+    for( foox = x1 ; foox <= x2 ; foox++) 
+    for( fooy = y1 ; fooy <= y2 ; fooy++) 
+    {
+        ansigotoyx( fooy , foox );  
+        printf( " " );
+    }
+}
+
+
+
+
+
 void gfxframe( int y1, int x1, int y2, int x2 )
 {
     int foo, fooy , foox ;
-    foo = x1;
+
+
+    foox = x1;
     for( fooy = y1 ; fooy <= y2 ; fooy++) 
     {
-        ansigotoyx( fooy , foo );  
-        //mvaddch( fooy , foo , ACS_VLINE );
+        ansigotoyx( fooy , foox );  
+        printf(  "|" );
+    }
+   
+    for( fooy = y1 ; fooy <= y2 ; fooy++) 
+    {
+        ansigotoyx( fooy , x1 );  
+        //printf(ESC "[%d;%dH", fooy, x1 );
         printf( "|" );
     }
+
     foo = x2;
     for( fooy = y1 ; fooy <= y2 ; fooy++) 
     {
          ansigotoyx( fooy , foo );  
-         //mvaddch( fooy , foo , ACS_VLINE );
          printf( "|" );
     }
     foo = y1;
     for( foox = x1 ; foox <= x2 ; foox++) 
     {
          ansigotoyx( foo , foox );  
-         //mvaddch( foo , foox , ACS_HLINE );
          printf( "-" );
     }
     foo = y2;
     for( foox = x1 ; foox <= x2 ; foox++) 
     {
          ansigotoyx( foo , foox );  
-         //mvaddch( foo , foox , ACS_HLINE );
          printf( "-" );
     }
-    //gfxchar(  y1,  x1, 'O' );
-    //gfxchar(  y1,  x2, 'O' );
-    //gfxchar(  y2,  x1, 'O' );
-    //gfxchar(  y2,  x2, 'O' );
-    //mvaddch( y1 , x1 , ACS_ULCORNER );
-    //mvaddch( y1 , x2 , ACS_URCORNER );
-    //mvaddch( y2 , x1 , ACS_LLCORNER );
-    //mvaddch( y2 , x2 , ACS_LRCORNER );
 }
 
 
@@ -659,6 +677,7 @@ int main( int argc, char *argv[])
        chdir( pathpan[ 1 ] );
        if ( viewpan[ 1 ] == 1 ) 
           printdir( 0, 0,       "." , 1 );
+
        chdir( pathpan[ 2 ] );
        if ( viewpan[ 2 ] == 1 ) 
           printdir( 0, cols/2,  "." , 2 );
@@ -672,8 +691,20 @@ int main( int argc, char *argv[])
        ch = getchar();
 
        chdir( pathpan[ pansel ] );
-       if (ch == 'q')            gameover = 1; 
-       else if (ch ==  'Q')      gameover = 1;
+       //if (ch == 'q')            gameover = 1; 
+       if (ch ==  'Q')      gameover = 1;
+
+
+       /* 
+       else if ( ch == 'e')      
+       {
+            chdir( pathpan[ pansel ] );
+            chdir( getenv( "HOME" ) );
+            chdir( "Documents" );
+            nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
+            strncpy( pathpan[ pansel ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+       } 
+       */
 
        else if ( ch == 'w')      
        {
@@ -708,11 +739,11 @@ int main( int argc, char *argv[])
             printf( "======= \n" );
             printf( " \n" );
             printf( " \n" );
-            printf("PATH:  %s \n", getcwd( cwd, PATH_MAX) );
+            ///printf("PATH:  %s \n", getcwd( cwd, PATH_MAX) );
+            //printf( " \n" );
+            printf("PATH 1: %s \n", pathpan[ 1 ] );
             printf( " \n" );
-            printf("PATH1: %s \n", pathpan[ 1 ] );
-            printf( " \n" );
-            printf("PATH2: %s \n", pathpan[ 2 ] );
+            printf("PATH 2: %s \n", pathpan[ 2 ] );
             printf( " \n" );
             //////////////////
             ansigotoyx( rows-1, 0 );
@@ -734,6 +765,13 @@ int main( int argc, char *argv[])
        }
        else if ( ch == 'l')      
        {
+            // save 
+            chdir( pathpan[ pansel ] );
+            strncpy( pathclipboard , getcwd( string, PATH_MAX ), PATH_MAX );
+            selclipboard =      nexp_user_sel[pansel];
+            scrollyclipboard =  nexp_user_scrolly[pansel];
+
+            // go 
             chdir( pathpan[ pansel ] );
             chdir( nexp_user_fileselection );
             nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
@@ -820,7 +858,7 @@ int main( int argc, char *argv[])
         {
                    chdir( pathpan[ pansel ] );
                    strncpy( string, " mv   " , PATH_MAX );
-                   strncat( string , " \"" , PATH_MAX - strlen(string) - 1);
+                   strncat( string , "   \"" , PATH_MAX - strlen(string) - 1);
                    strncat( string ,   nexp_user_fileselection  , PATH_MAX - strlen(string) - 1);
                    strncat( string , "\" " , PATH_MAX - strlen(string) - 1);
                    strncat( string , "  " , PATH_MAX - strlen(string) - 1);
@@ -875,6 +913,44 @@ int main( int argc, char *argv[])
                       nsystem( string );
         }
 
+
+        else if ( ( ch == '2') || ( ch == '3') )
+        {
+                   ansigotoyx( rows-1 , 0 );
+                   printhline( );
+                   ansigotoyx( rows , 0 );
+                   strninput( "",    nexp_user_fileselection    );
+                   strncpy( string, userstr , PATH_MAX );
+                   printf("got: \"%s\"\n", string );
+
+                   chdir( pathpan[ pansel ] );
+                   strncpy( string, " mv  " , PATH_MAX );
+
+                   strncat( string , "   \"" , PATH_MAX - strlen(string) - 1);
+                   strncat( string ,   nexp_user_fileselection  , PATH_MAX - strlen(string) - 1);
+                   strncat( string , "\" " , PATH_MAX - strlen(string) - 1);
+
+                   strncat( string , " \"" , PATH_MAX - strlen(string) - 1);
+                   strncat( string , userstr  , PATH_MAX - strlen(string) - 1);
+                   strncat( string , "\" " , PATH_MAX - strlen(string) - 1);
+                   strncat( string , "  " , PATH_MAX - strlen(string) - 1);
+
+                   ansigotoyx( rows, 0 );
+                   gfxhline( rows , 0 , cols-1, ' '); 
+                   ansigotoyx( rows-1, 0 );
+                   gfxhline( rows-1 , 0 , cols-1 , ' ' ); 
+                   ansigotoyx( rows, 0 );
+                   gfxhline(  rows-1 , 0 , cols-1 , '=' ); 
+
+                   printf( "CMD: %s [y/n]?\n" ,  string );
+                   printf( "Answer: Yes or No [y/n]?\n" );
+                   printf( "=========================\n" );
+                   foo = getchar();
+                   if ( ( foo == '1' ) || ( foo == 'y' ) )
+                      nsystem( string );
+        }
+
+
         else if ( ch == '7') 
         {
                    ansigotoyx( rows-1 , 0 );
@@ -909,7 +985,6 @@ int main( int argc, char *argv[])
 
 
 
-
        else if ( ch == 'r' ) 
        {
            clear_screen();
@@ -922,8 +997,7 @@ int main( int argc, char *argv[])
            nsystem( string ); 
        }
 
-        else if ( ( ch == '"')        
-        || ( ch == 'm')       )
+        else if ( ( ch == '"')  || ( ch == 'm')       )
         {
             chdir( pathpan[ pansel ] );
             strncpy( pathclipboard , getcwd( string, PATH_MAX ), PATH_MAX );
@@ -931,9 +1005,10 @@ int main( int argc, char *argv[])
             scrollyclipboard = nexp_user_scrolly[pansel];
         }
 
-         else if ( ( ch == 'b') || ( ch == '\'')   || ( ch == '#') || ( ch == '\'')   )
+
+         else if (  ch == 'b' ) 
          {
-            home();printf( "|BACK|");
+            home(); printf( "|BACK|");
             chdir( pathpan[ pansel ] );
             chdir( pathclipboard );
             strncpy( pathpan[ pansel ] , getcwd( string, PATH_MAX ), PATH_MAX );
@@ -955,6 +1030,10 @@ int main( int argc, char *argv[])
                nrunwith( " feh -FZ " , nexp_user_fileselection );
              else if ( strcmp( fextension( nexp_user_fileselection ) , "png" ) == 0 )
                nrunwith( " feh -FZ " , nexp_user_fileselection );
+             else if ( strcmp( fextension( nexp_user_fileselection ) , "pdf" ) == 0 )
+               nrunwith( " mupdf " , nexp_user_fileselection );
+             else if ( strcmp( fextension( nexp_user_fileselection ) , "PDF" ) == 0 )
+               nrunwith( " mupdf " , nexp_user_fileselection );
              else if ( strcmp( fextension( nexp_user_fileselection ) , "mrk" ) == 0 )
                nrunwith( " vim " , nexp_user_fileselection );
              else if ( strcmp( fextension( nexp_user_fileselection ) , "bmr" ) == 0 )
@@ -1005,8 +1084,33 @@ int main( int argc, char *argv[])
        else if ( ch == 'd')      nexp_user_scrolly[pansel]+=4;
        else if ( ch == 'n')      nexp_user_scrolly[pansel]+=4;
 
-       else if ( ch == 't' )     printf("%syellow\n", KYEL);
-       else if ( ch == 'T' )     printf("%sgreen\n",  KGRN);
+       else if ( ch == 'c' )     printf("%syellow\n", KYEL);
+       else if ( ch == 'C' )     printf("%sgreen\n",  KGRN);
+
+       else if ( ch == 't' ) 
+       {
+           clear_screen();
+           strncpy( string , "  " , PATH_MAX );
+           strncat( string , " tless " , PATH_MAX - strlen( string ) -1 );
+           strncat( string , " " , PATH_MAX - strlen( string ) -1 );
+           strncat( string , " \"" , PATH_MAX - strlen( string ) -1 );
+           strncat( string ,  nexp_user_fileselection , PATH_MAX - strlen( string ) -1 );
+           strncat( string , "\" " , PATH_MAX - strlen( string ) -1 );
+           nsystem( string ); 
+       }
+
+       else if ( ( ch == 'T' )  || ( ch == 'z' ) )
+       {
+           clear_screen();
+           strncpy( string , "  " , PATH_MAX );
+           strncat( string , " mview " , PATH_MAX - strlen( string ) -1 );
+           strncat( string , " " , PATH_MAX - strlen( string ) -1 );
+           strncat( string , " \"" , PATH_MAX - strlen( string ) -1 );
+           strncat( string ,  nexp_user_fileselection , PATH_MAX - strlen( string ) -1 );
+           strncat( string , "\" " , PATH_MAX - strlen( string ) -1 );
+           nsystem( string ); 
+       }
+
 
 
        else if ( ch == 'r' )   {  enable_waiting_for_enter();  nrunwith(  " tcview ",  nexp_user_fileselection    );   }
@@ -1105,7 +1209,28 @@ int main( int argc, char *argv[])
             strncpy( string, userstr , PATH_MAX );
             printf("got: \"%s\"\n", string );
 
-            if ( strcmp( string, "key" ) == 0 )  
+            if ( strcmp( string, "size" ) == 0 )  
+            {
+              printf("Screen\n" );
+              printf("Env HOME:  %s\n", getenv( "HOME" ));
+              printf("Env PATH:  %s\n", getcwd( string, PATH_MAX ) );
+              printf("Env TERM ROW:  %d\n", w.ws_row );
+              printf("Env TERM COL:  %d\n", w.ws_col );
+              getchar();
+            }    
+            else if ( strcmp( string, "box" ) == 0 )  
+            {
+              printf("Box\n" );
+              printf("Env HOME:  %s\n", getenv( "HOME" ));
+              printf("Env PATH:  %s\n", getcwd( string, PATH_MAX ) );
+              printf("Env TERM ROW:  %d\n", w.ws_row );
+              printf("Env TERM COL:  %d\n", w.ws_col );
+              gfxrect(   (int)  rows*30/100 ,  (int) cols*30/100, rows*70/100, cols*70/100 );
+              gfxframe(  (int)  rows*30/100 ,  (int)  cols*30/100, rows*70/100, cols*70/100 );
+              mvcenter(  (int)  rows*30/100,   "| MENU |");
+              getchar();
+            }    
+            else if ( strcmp( string, "key" ) == 0 )  
             {
                  ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
                  ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
@@ -1145,21 +1270,22 @@ int main( int argc, char *argv[])
             { nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; }
        }
 
-       else if ( ch == '1' ) pansel = 1 ;
-       else if ( ch == '2' ) pansel = 2 ;
-
        /// and key 'i'
        else if ( ch == 'i' )
        {  if ( pansel == 1 )   pansel = 2 ; else pansel = 1; }
 
-       else if ( ch == 'a') 
+
+
+       else if  ( ( ch == 'A') || ( ch == 'a') || ( ch == 'q' ) )
        {
+            // small size menu
+            gfxrect(     rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
             gfxframe(     rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
             mvcenter(     rows*30/100, "| MENU |");
             foo = 1;
-            printat(   rows*30/100 +foo++ , cols*30/100+1 , "u: Unidoc ");
-            printat(   rows*30/100 +foo++ , cols*30/100+1 , "y: Quit ");
-            printat(   rows*30/100 +foo++ , cols*30/100+1 , "n: Abort ");
+            printat(   rows*30/100 +foo++ , cols*30/100+1 , "u: Unidoc");
+            printat(   rows*30/100 +foo++ , cols*30/100+1 , "y: Quit");
+            printat(   rows*30/100 +foo++ , cols*30/100+1 , "n: Abort");
             ansigotoyx(  rows*70/100 , cols*70/100 );
             ch = getchar();
             ansigotoyx( rows-1, 0 );
